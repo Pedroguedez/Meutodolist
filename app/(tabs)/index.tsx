@@ -1,70 +1,91 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { Checkbox } from 'react-native-paper';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+// Função temporária para simular tarefas
+const getTasksFromAPI = async () => {
+  // Implemente a lógica para obter as tarefas do banco de dados SQLite
+  return [
+    { id: 1, title: 'Fazer compras', completed: false, isChecked: false },
+    { id: 2, title: 'Estudar para a prova', completed: true,  isChecked: false },
+    { id: 3, title: 'Estudar para a prova', completed: true,  isChecked: false },
+    { id: 4, title: 'Estudar para a prova', completed: true,  isChecked: false },
+    { id: 5, title: 'Estudar para a prova', completed: true,  isChecked: false },
+    { id: 6, title: 'Estudar para a prova', completed: true,  isChecked: false },
+    // Mais tarefas...
+  ];
+};
 
-export default function HomeScreen() {
+const TaskListScreen = () => {
+  // Especificando a tipagem do estado
+  const [tasks, setTasks] = useState<{ id: number; title: string; completed: boolean; isChecked: boolean; }[]>([]);
+  const [ativo, setAtivo] = useState('unchecked');
+
+  /*function check(){
+    if(ativo === 'checked'){
+    setAtivo('unchecked')
+    }else{
+    setAtivo('checked') 
+    }
+  }*/
+function check(id){
+    tasks.map((task)=>{
+      if(id === task.id){
+        task.isChecked = !task.isChecked 
+      }
+    })
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const tasksFromAPI = await getTasksFromAPI();
+      setTasks(tasksFromAPI);
+    };
+
+    fetchData();
+  }, []);
+
+  const handleTaskCompletion = (taskId: number) => {
+    // Implemente a lógica para atualizar a tarefa como concluída no banco de dados
+    const updatedTasks = tasks.map(task => {
+      if (task.id === taskId) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <FlatList
+        data={tasks}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item, index }) => (
+          <View style={styles.taskItem}>
+                <Checkbox.Item label="Item" status={ativo} onPress={()=>check(item.id)}/>
+            <Text style={styles.taskTitle}>{item.title}</Text>
+          </View>
+        )}
+      />
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  taskTitle: {
+    marginLeft: 8,
   },
 });
+
+export default TaskListScreen;
