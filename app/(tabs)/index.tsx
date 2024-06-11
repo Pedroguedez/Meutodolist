@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 
 // Função temporária para simular tarefas
 const getTasksFromAPI = async () => {
-  // Implemente a lógica para obter as tarefas do banco de dados SQLite
   return [
     { id: 1, title: 'Fazer compras', completed: false, isChecked: false },
     { id: 2, title: 'Estudar para a prova', completed: true,  isChecked: false },
@@ -17,24 +16,7 @@ const getTasksFromAPI = async () => {
 };
 
 const TaskListScreen = () => {
-  // Especificando a tipagem do estado
   const [tasks, setTasks] = useState<{ id: number; title: string; completed: boolean; isChecked: boolean; }[]>([]);
-  const [ativo, setAtivo] = useState('unchecked');
-
-  /*function check(){
-    if(ativo === 'checked'){
-    setAtivo('unchecked')
-    }else{
-    setAtivo('checked') 
-    }
-  }*/
-function check(id){
-    tasks.map((task)=>{
-      if(id === task.id){
-        task.isChecked = !task.isChecked 
-      }
-    })
-  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,27 +27,33 @@ function check(id){
     fetchData();
   }, []);
 
-  const handleTaskCompletion = (taskId: number) => {
-    // Implemente a lógica para atualizar a tarefa como concluída no banco de dados
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return { ...task, completed: !task.completed };
+  const checkTask = (id:number) => {
+    setTasks(tasks.map(task => {
+      if (task.id === id) {
+        return { ...task, isChecked: !task.isChecked };
       }
       return task;
-    });
-    setTasks(updatedTasks);
+    }));
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.appName}>A fazer</Text>
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.taskItem}>
-                <Checkbox.Item label="Item" status={ativo} onPress={()=>check(item.id)}/>
-            <Text style={styles.taskTitle}>{item.title}</Text>
-          </View>
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => checkTask(item.id)}>
+            <View style={styles.taskItem}>
+              <Text style={styles.taskTitle}>{item.title}</Text>
+              <Checkbox.Item 
+                label="" 
+                status={item.isChecked ? 'checked' : 'unchecked'} 
+                onPress={() => checkTask(item.id)}
+                style={styles.checkbox}
+              />
+            </View>
+          </TouchableOpacity>
         )}
       />
     </View>
@@ -75,16 +63,26 @@ function check(id){
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
+  },
+  appName: {
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // Alinha os itens à direita
     marginBottom: 8,
   },
   taskTitle: {
-    marginLeft: 8,
+    flex: 1, // Para o título ocupar o espaço restante
+  },
+  checkbox: {
+    alignSelf: 'flex-end', // Alinha o checkbox à direita
   },
 });
 
