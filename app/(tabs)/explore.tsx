@@ -1,40 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Checkbox } from 'react-native-paper';
+import { setupDatabase, getAllTasks, updateTask } from '../../services/database'; // Importa as funções do banco de dados
 
-// Função temporária para simular tarefas
-const getTasksFromAPI = async () => {
-  return [
-    { id: 1, title: 'Fazer compras', completed: false, isChecked: false },
-    { id: 2, title: 'Estudar para a prova', completed: true,  isChecked: false },
-    { id: 3, title: 'Estudar para a prova', completed: true,  isChecked: false },
-    { id: 4, title: 'Estudar para a prova', completed: true,  isChecked: false },
-    { id: 5, title: 'Estudar para a prova', completed: true,  isChecked: false },
-    { id: 6, title: 'Estudar para a prova', completed: true,  isChecked: false },
-    // Mais tarefas...
-  ];
-};
+
+setupDatabase();
+
 
 const TaskListScreen = () => {
   const [tasks, setTasks] = useState<{ id: number; title: string; completed: boolean; isChecked: boolean; }[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const tasksFromAPI = await getTasksFromAPI();
-      setTasks(tasksFromAPI);
+      try {
+        const tasksFromDB = await getAllTasks(); 
+        setTasks(tasksFromDB);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
     };
 
     fetchData();
   }, []);
 
-  const checkTask = (id:number) => {
-    setTasks(tasks.map(task => {
-      if (task.id === id) {
-        return { ...task, isChecked: !task.isChecked };
-      }
-      return task;
-    }));
+  const checkTask = async (id: number, completed: boolean) => {
+    try {
+      await updateTask(id, !completed); 
+      setTasks(tasks.map(task => {
+        if (task.id === id) {
+          return { ...task, completed: !completed, isChecked: !completed };
+        }
+        return task;
+      }));
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
+
 
   return (
     <View style={styles.container}>
@@ -43,13 +45,13 @@ const TaskListScreen = () => {
         data={tasks}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => checkTask(item.id)}>
+          <TouchableOpacity onPress={() => checkTask(item.id, item.completed)}>
             <View style={styles.taskItem}>
               <Text style={styles.taskTitle}>{item.title}</Text>
               <Checkbox.Item 
                 label="" 
-                status={item.isChecked ? 'checked' : 'unchecked'} 
-                onPress={() => checkTask(item.id)}
+                status={item.completed ? 'checked' : 'unchecked'} 
+                onPress={() => checkTask(item.id, item.completed)}
                 style={styles.checkbox}
               />
             </View>
@@ -75,14 +77,14 @@ const styles = StyleSheet.create({
   taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Alinha os itens à direita
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   taskTitle: {
-    flex: 1, // Para o título ocupar o espaço restante
+    flex: 1, 
   },
   checkbox: {
-    alignSelf: 'flex-end', // Alinha o checkbox à direita
+    alignSelf: 'flex-end', 
   },
 });
 

@@ -16,12 +16,11 @@ export const insertTask = (title, completed) => {
             tx.executeSql(
                 'INSERT INTO tasks (title, completed) VALUES (?, ?)',
                 [title, completed ? 1 : 0],
-                (_, { rowsAffected }) => {
-                    if (rowsAffected > 0) {
-                        resolve();
-                    } else {
-                        reject(new Error('Failed to insert task'));
-                    }
+                (_, { insertId }) => {
+                    resolve(insertId);
+                },
+                (_, error) => {
+                    reject(error);
                 }
             );
         });
@@ -35,7 +34,13 @@ export const getAllTasks = () => {
                 'SELECT * FROM tasks',
                 [],
                 (_, { rows }) => {
-                    resolve(rows._array);
+                    const tasks = rows._array.map(task => ({
+                        id: task.id,
+                        title: task.title,
+                        completed: task.completed === 1,
+                        isChecked: false 
+                    }));
+                    resolve(tasks);
                 },
                 (_, error) => {
                     reject(error);
@@ -52,11 +57,10 @@ export const updateTask = (id, completed) => {
                 'UPDATE tasks SET completed = ? WHERE id = ?',
                 [completed ? 1 : 0, id],
                 (_, { rowsAffected }) => {
-                    if (rowsAffected > 0) {
-                        resolve();
-                    } else {
-                        reject(new Error('Failed to update task'));
-                    }
+                    resolve(rowsAffected);
+                },
+                (_, error) => {
+                    reject(error);
                 }
             );
         });

@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { TextInput, Button} from 'react-native-paper';
+import { TextInput, Button } from 'react-native-paper';
+import { insertTask } from '../../services/database'; // Importa a função insertTask do banco de dados
 
 const AddTaskScreen = ({ onAddTask }) => {
   const [taskTitle, setTaskTitle] = useState('');
 
-  const handleAddTask = () => {
-    if (taskTitle.trim()) { 
-      onAddTask(taskTitle); 
-      setTaskTitle(''); 
+  const handleAddTask = async () => {
+    if (taskTitle.trim()) {
+      try {
+        const taskId = await insertTask(taskTitle, false);
+        onAddTask({ id: taskId, title: taskTitle, completed: false, isChecked: false });
+        setTaskTitle('');
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
     }
   };
 
@@ -20,9 +26,9 @@ const AddTaskScreen = ({ onAddTask }) => {
         value={taskTitle}
         onChangeText={text => setTaskTitle(text)}
       />
-      <Button icon="plus" mode="contained" onPress={() => console.log('Pressed')}>
-   Add new task
-  </Button>
+      <Button icon="plus" mode="contained" onPress={handleAddTask}>
+        Add new task
+      </Button>
     </View>
   );
 };
